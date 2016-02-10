@@ -24,6 +24,11 @@ Btw, for pyscard to install and work correctly with Python 3 (at least in Raspbi
 ###Utilisation :
 
     from beid.beid import scan_readers
+    from pprint import pprint
 
     r = scan_readers()[0]
-    r.read_card()
+    pprint(r.read_card())
+
+    infos = r.read_card(read_photo=True)
+    with open("photo.jpg", "wb") as f:
+        f.write(infos['photo'])

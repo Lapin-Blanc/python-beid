@@ -73,7 +73,76 @@ class BEID_reader(object):
                     infos.append(bytes(chaine_bytes).decode("utf-8"))
                 except UnicodeDecodeError:
                     infos.append(u"")
-        return infos
+            informations = {
+        "num_carte" : infos[0],
+        "date_debut" : infos[2].replace(".","/"),
+        "date_fin" : infos[3].replace(".","/"),
+        "lieu_delivrance" : infos[4],
+        "num_nat" : infos[5],
+        "nom" : infos[6],
+        "prenoms" : infos[7],
+        "suffixe" : infos[8],
+        "nationalite" : infos[9],
+        "lieu_naissance" : infos[10],
+        "date_naissance" : infos[11].split()[0] + "/" + MAP_MOIS[infos[11].split()[1]] + "/" + infos[11].split()[2],
+        "sexe" : infos[12],
+        }
+
+        # select file : adresse
+        cmd = [0x00, 0xA4, 0x08, 0x0C, len(ADDRESS)] + ADDRESS
+        data, sw1, sw2 = self._sendADPU(cmd)
+
+        # read file
+        cmd = [0x00, 0xB0, 0x00, 0x00, 256]
+        data, sw1, sw2 = self._sendADPU(cmd)
+        if "%x"%sw1 == "6c":
+            cmd = [0x00, 0xB0, 0x00, 0x00, sw2]
+            data, sw1, sw2 = self._sendADPU(cmd)
+            idx = 0
+            num_info = 0
+            infos = []
+            while num_info <= 2:
+                num_info = data[idx]
+                idx += 1
+                len_info = data[idx]
+                idx += 1
+                chaine_bytes = []
+                for x in range(len_info):
+                    chaine_bytes.append(data[idx])
+                    idx += 1
+                try:
+                    infos.append(bytes(chaine_bytes).decode("utf-8"))
+                except UnicodeDecodeError:
+                    infos.append(u"")
+
+        informations["adresse"] = infos[0]
+        informations["code_postal"] = infos[1]
+        informations["localite"] = infos[2]
+        
+        if read_photo:
+            # select file : photo
+            cmd = [0x00, 0xA4, 0x08, 0x0C, len(PHOTO)] + PHOTO
+            data, sw1, sw2 = self._sendADPU(cmd)
+
+            photo_bytes = []
+
+            offset = 0
+            while "%x"%sw1 == "90":
+                cmd = [0x00, 0xB0, offset, 0x00, 256]
+                data, sw1, sw2 = self._sendADPU(cmd)
+                photo_bytes += data
+                offset += 1
+            if "%x"%sw1 == "6c":
+                offset -= 1
+                cmd = [0x00, 0xB0, offset, 0x00, sw2]
+                data, sw1, sw2 = self._sendADPU(cmd)
+                photo_bytes += data
+                
+            photo = bytearray(photo_bytes)
+            informations["photo"] = photo
+        
+        return informations
+
         
 
     def __repr__(self):
