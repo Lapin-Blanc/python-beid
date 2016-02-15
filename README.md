@@ -25,6 +25,7 @@ Btw, for pyscard to install and work correctly with Python 3 (at least in Raspbi
 
     from beid.beid import scan_readers, read_infos, triggered_decorator
     from pprint import pprint
+    from time import sleep
 
     # retrieve a list of available readers
     r = scan_readers()[0]
@@ -41,6 +42,7 @@ Btw, for pyscard to install and work correctly with Python 3 (at least in Raspbi
             i = read_infos(card)
             pprint(i)
     
+    sleep(5)
 
     infos = read_infos(r, read_photo=True)
     with open("photo.jpg", "wb") as f:
