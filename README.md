@@ -23,12 +23,25 @@ Btw, for pyscard to install and work correctly with Python 3 (at least in Raspbi
 
 ###Utilisation :
 
-    from beid.beid import scan_readers
+    from beid.beid import scan_readers, read_infos, triggered_decorator
     from pprint import pprint
 
+    # retrieve a list of available readers
     r = scan_readers()[0]
-    pprint(r.read_card())
 
-    infos = r.read_card(read_photo=True)
+    # declare a function that will be executed automatically when a card is removed/insterted
+    # funcion arguments should be :
+    # - action : which will be "inserted" or "removed" when the function will be called
+    # - card : which will be the card if inserted
+    # - reader : which will hold  the name of the reader to use 
+
+    @triggered_decorator
+    def basic_read(action, card, reader=r.name):
+        if action=="inserted":
+            i = read_infos(card)
+            pprint(i)
+    
+
+    infos = read_infos(r, read_photo=True)
     with open("photo.jpg", "wb") as f:
         f.write(infos['photo'])
